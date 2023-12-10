@@ -13,7 +13,7 @@ const LineSegment = struct {
 };
 
 pub fn solve_part1() !void {
-    var inputs = try std.fs.cwd().openFile("inputs/day10.txt", .{});
+    var inputs = try std.fs.cwd().openFile("inputs/day10_test.txt", .{});
     var buffered_reader = std.io.bufferedReader(inputs.reader());
     var in_stream = buffered_reader.reader();
 
@@ -21,9 +21,6 @@ pub fn solve_part1() !void {
     var allocator = arena.allocator();
 
     var lines = ArrayList([]u8).init(allocator);
-
-    var positions = ArrayList(Position).init(allocator);
-    _ = positions;
 
     while (try in_stream.readUntilDelimiterOrEofAlloc(allocator, '\n', 100 * 1024)) |line| {
         try lines.append(line);
@@ -42,121 +39,80 @@ pub fn solve_part1() !void {
 
     var steps: u32 = 0;
     var dir_1: Position = .{};
-    var dir_1_pos: Position = start_pos;
+    var pos_1: Position = start_pos;
 
     var dir_2: Position = .{};
-    var dir_2_pos: Position = start_pos;
+    var pos_2: Position = start_pos;
 
     var found_connections: i32 = 0;
 
-    if (start_pos.y < lines.items.len - 1 and is_connected(.{ .x = 0, .y = 1 }, lines.items[@as(usize, @intCast(start_pos.y + 1))][@as(usize, @intCast(start_pos.x))])) {
-        if (found_connections == 0) {
-            dir_1.y = 1;
-        } else {
-            dir_2.y = 1;
+    var dirs = [_]Position{
+        .{ .x = 0, .y = 1 },
+        .{ .x = 0, .y = -1 },
+        .{ .x = 1, .y = 0 },
+        .{ .x = -1, .y = 0 },
+    };
+
+    for (dirs) |dir| {
+        if ((start_pos.y + dir.y >= 0 and start_pos.y + dir.y < lines.items.len) and (start_pos.x + dir.x >= 0 and start_pos.x + dir.x < lines.items[0].len) and is_connected(dir, lines.items[@as(usize, @intCast(start_pos.y + dir.y))][@as(usize, @intCast(start_pos.x + dir.x))])) {
+            if (found_connections == 0) {
+                dir_1 = dir;
+            } else {
+                dir_2 = dir;
+            }
+            found_connections += 1;
         }
-        found_connections += 1;
-    }
-    if (start_pos.y != 0 and is_connected(.{ .x = 0, .y = -1 }, lines.items[@as(usize, @intCast(start_pos.y - 1))][@as(usize, @intCast(start_pos.x))])) {
-        if (found_connections == 0) {
-            dir_1.y = -1;
-        } else {
-            dir_2.y = -1;
-        }
-        found_connections += 1;
-    }
-    if (start_pos.x < lines.items[0].len - 1 and is_connected(.{ .x = 1, .y = 0 }, lines.items[@as(usize, @intCast(start_pos.y))][@as(usize, @intCast(start_pos.x + 1))])) {
-        if (found_connections == 0) {
-            dir_1.x = 1;
-        } else {
-            dir_2.x = 1;
-        }
-        found_connections += 1;
-    }
-    if (start_pos.x != 0 and is_connected(.{ .x = -1, .y = 0 }, lines.items[@as(usize, @intCast(start_pos.y))][@as(usize, @intCast(start_pos.x - 1))])) {
-        if (found_connections == 0) {
-            dir_1.x = -1;
-        } else {
-            dir_2.x = -1;
-        }
-        found_connections += 1;
     }
 
-    if (found_connections > 2) {
-        std.log.err("Found too many connections! Found: {d}", .{found_connections});
-    } else if (found_connections < 2) {
-        std.log.err("Found too few connections! Found: {d}", .{found_connections});
-    }
+    while ((pos_1.x == start_pos.x and pos_1.y == start_pos.y) or (pos_1.x != pos_2.x or pos_1.y != pos_2.y)) : (steps += 1) {
+        var c = &lines.items[@as(usize, @intCast(pos_1.y))][@as(usize, @intCast(pos_1.x))];
 
-    var found = false;
-
-    while ((dir_1_pos.x == start_pos.x and dir_1_pos.y == start_pos.y) or (dir_1_pos.x != dir_2_pos.x or dir_1_pos.y != dir_2_pos.y)) : (steps += 1) {
-        var c = lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))];
-
-        if (dir_1_pos.x == 8 and dir_1_pos.y == 5) {
-            found = true;
-            std.log.info("Pipe? {c}", .{c});
-        }
-
-        if (c == 'L' or c == 'J' or c == '|') {
-            lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))] = 'x';
+        if (c.* == 'L' or c.* == 'J' or c.* == '|') {
+            c.* = 'x';
         } else {
-            lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))] = ',';
+            c.* = ',';
         }
 
-        c = lines.items[@as(usize, @intCast(dir_2_pos.y))][@as(usize, @intCast(dir_2_pos.x))];
-        if (dir_2_pos.x == 8 and dir_2_pos.y == 5) {
-            found = true;
-            std.log.info("Pipe? {c}", .{c});
-        }
+        c = &lines.items[@as(usize, @intCast(pos_2.y))][@as(usize, @intCast(pos_2.x))];
 
-        if (c == 'L' or c == 'J' or c == '|') {
-            lines.items[@as(usize, @intCast(dir_2_pos.y))][@as(usize, @intCast(dir_2_pos.x))] = 'x';
+        if (c.* == 'L' or c.* == 'J' or c.* == '|') {
+            c.* = 'x';
         } else {
-            lines.items[@as(usize, @intCast(dir_2_pos.y))][@as(usize, @intCast(dir_2_pos.x))] = ',';
+            c.* = ',';
         }
 
-        dir_1_pos.x += dir_1.x;
-        dir_1_pos.y += dir_1.y;
-        dir_2_pos.x += dir_2.x;
-        dir_2_pos.y += dir_2.y;
+        pos_1.x += dir_1.x;
+        pos_1.y += dir_1.y;
+        pos_2.x += dir_2.x;
+        pos_2.y += dir_2.y;
 
-        if (next_dir(dir_1, lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))])) |n_dir| {
+        if (next_dir(dir_1, lines.items[@as(usize, @intCast(pos_1.y))][@as(usize, @intCast(pos_1.x))])) |n_dir| {
             dir_1 = n_dir;
         } else {
-            std.log.info("Failed to get next dir on {d}, {d}", .{ dir_1_pos.x, dir_1_pos.y });
+            std.log.info("Failed to get next dir on {d}, {d}", .{ pos_1.x, pos_1.y });
             std.os.exit(1);
         }
-        if (next_dir(dir_2, lines.items[@as(usize, @intCast(dir_2_pos.y))][@as(usize, @intCast(dir_2_pos.x))])) |n_dir| {
+        if (next_dir(dir_2, lines.items[@as(usize, @intCast(pos_2.y))][@as(usize, @intCast(pos_2.x))])) |n_dir| {
             dir_2 = n_dir;
         } else {
-            std.log.info("Failed to get next dir on {d}, {d}", .{ dir_1_pos.x, dir_1_pos.y });
+            std.log.info("Failed to get next dir on {d}, {d}", .{ pos_2.x, pos_2.y });
             std.os.exit(1);
         }
     }
 
-    var c1 = lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))];
-    if (c1 == 'L' or c1 == 'J' or c1 == '|') {
-        lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))] = 'x';
+    // Update the farthest character to x or ,.
+    var c1 = &lines.items[@as(usize, @intCast(pos_1.y))][@as(usize, @intCast(pos_1.x))];
+    if (c1.* == 'L' or c1.* == 'J' or c1.* == '|') {
+        c1.* = 'x';
     } else {
-        lines.items[@as(usize, @intCast(dir_1_pos.y))][@as(usize, @intCast(dir_1_pos.x))] = ',';
+        c1.* = ',';
     }
 
     var inside: u32 = 0;
     var outside: u32 = 0;
 
-    for (lines.items, 0..) |line, y| {
+    for (lines.items) |line| {
         for (0..line.len) |x| {
-            var yy = y;
-            _ = yy;
-            var xx = x;
-            _ = xx;
-
-            //if (line[x] == '-' or line[x] == 'F' or line[x] == '7' or line[x] == 'J' or line[x] == 'L' or line[x] == '|') {
-            //    line[x] = ' ';
-            //    continue;
-            // }
-
             if (line[x] == ',' or line[x] == 'x') {
                 continue;
             }
@@ -185,10 +141,11 @@ pub fn solve_part1() !void {
     }
 
     std.log.info("Part 1 result: {d}", .{steps});
-    std.log.info("Part 2 result: {d}, {d}", .{ inside, outside });
+    std.log.info("Part 2 result: Inside: {d}, Outside: {d}", .{ inside, outside });
 }
 
 fn is_connected(dir: Position, c: u8) bool {
+    std.log.info("{c}", .{c});
     if (dir.y == 1) {
         return c == '|' or c == 'F' or c == '7';
     } else if (dir.y == -1) {
