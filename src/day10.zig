@@ -7,11 +7,6 @@ const Position = struct {
     y: i64 = 0,
 };
 
-const LineSegment = struct {
-    start: Position,
-    end: Position,
-};
-
 pub fn solve_part1() !void {
     var inputs = try std.fs.cwd().openFile("inputs/day10_test.txt", .{});
     var buffered_reader = std.io.bufferedReader(inputs.reader());
