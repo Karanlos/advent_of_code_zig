@@ -8,7 +8,8 @@ const Position = struct {
 };
 
 pub fn solve_part1() !void {
-    var inputs = try std.fs.cwd().openFile("inputs/day10_test.txt", .{});
+    var start_timestamp = std.time.microTimestamp();
+    var inputs = try std.fs.cwd().openFile("inputs/day10.txt", .{});
     var buffered_reader = std.io.bufferedReader(inputs.reader());
     var in_stream = buffered_reader.reader();
 
@@ -95,6 +96,8 @@ pub fn solve_part1() !void {
         }
     }
 
+    var part1_timestamp = std.time.microTimestamp() - start_timestamp;
+
     // Update the farthest character to x or ,.
     var c1 = &lines.items[@as(usize, @intCast(pos_1.y))][@as(usize, @intCast(pos_1.x))];
     if (c1.* == 'L' or c1.* == 'J' or c1.* == '|') {
@@ -129,14 +132,16 @@ pub fn solve_part1() !void {
         }
     }
 
+    var part2_timestamp = std.time.microTimestamp() - start_timestamp;
+
     std.mem.reverse([]u8, lines.items);
 
     for (lines.items) |line| {
         std.log.info("{s}", .{line});
     }
 
-    std.log.info("Part 1 result: {d}", .{steps});
-    std.log.info("Part 2 result: Inside: {d}, Outside: {d}", .{ inside, outside });
+    std.log.info("Part 1 result {d} microseconds: {d}", .{ part1_timestamp, steps });
+    std.log.info("Part 2 result {d} microseconds: Inside: {d}, Outside: {d}", .{ part2_timestamp, inside, outside });
 }
 
 fn is_connected(dir: Position, c: u8) bool {
