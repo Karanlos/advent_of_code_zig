@@ -8,7 +8,6 @@ const Position = struct {
 };
 
 pub fn solve_part1() !void {
-    var start_timestamp = std.time.microTimestamp();
     var inputs = try std.fs.cwd().openFile("inputs/day10.txt", .{});
     var buffered_reader = std.io.bufferedReader(inputs.reader());
     var in_stream = buffered_reader.reader();
@@ -22,6 +21,8 @@ pub fn solve_part1() !void {
         try lines.append(line);
     }
     std.mem.reverse([]u8, lines.items);
+
+    var timer = try std.time.Timer.start();
 
     var start_pos = blk: for (lines.items, 0..) |line, y| {
         if (std.mem.indexOfScalar(u8, line, 'S')) |x| {
@@ -96,7 +97,7 @@ pub fn solve_part1() !void {
         }
     }
 
-    var part1_timestamp = std.time.microTimestamp() - start_timestamp;
+    var part1_timestamp = timer.read();
 
     // Update the farthest character to x or ,.
     var c1 = &lines.items[@as(usize, @intCast(pos_1.y))][@as(usize, @intCast(pos_1.x))];
@@ -132,7 +133,7 @@ pub fn solve_part1() !void {
         }
     }
 
-    var part2_timestamp = std.time.microTimestamp() - start_timestamp;
+    var part2_timestamp = timer.read();
 
     std.mem.reverse([]u8, lines.items);
 
@@ -145,7 +146,6 @@ pub fn solve_part1() !void {
 }
 
 fn is_connected(dir: Position, c: u8) bool {
-    std.log.info("{c}", .{c});
     if (dir.y == 1) {
         return c == '|' or c == 'F' or c == '7';
     } else if (dir.y == -1) {

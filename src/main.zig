@@ -1,7 +1,7 @@
 const std = @import("std");
-const day1 = @import("day1.zig");
-const day8 = @import("day8.zig");
-const day9 = @import("day9.zig");
+//const day1 = @import("day1.zig");
+//const day8 = @import("day8.zig");
+//const day9 = @import("day9.zig");
 const day10 = @import("day10.zig");
 
 pub fn main() anyerror!void {
